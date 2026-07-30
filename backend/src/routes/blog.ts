@@ -13,16 +13,16 @@ export const blogRouter = new Hono<
 
 
 blogRouter.use("/*", (c, next)=>{
-  next();
+  next(); 
 })
 
 blogRouter.post('/', async (c) => {
 
-    const prisma = new PrismaClient({
+  const prisma = new PrismaClient({
       accelerateUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate());
     const body = await c.req.json();
-    await prisma.blog.create({
+    const blog = await prisma.blog.create({
       data: {
         title : body.title,
         content : body.content,
@@ -31,17 +31,70 @@ blogRouter.post('/', async (c) => {
       }
     })
 
-  return c.text('Hello Hono!')
+  return c.json({
+    id: blog.id,
+  })
 })
 
-blogRouter.put('/a', (c) => {
-  return c.text('Hello Hono!')
+
+
+blogRouter.put('/a', async(c) => {
+
+  const prisma = new PrismaClient({
+      accelerateUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate());
+    const body = await c.req.json();
+    const blog = await prisma.blog.update({
+      where : {
+        id : body.id
+      },
+      data: {
+        title : body.title,
+        content : body.content,
+
+      }
+    })
+
+  return c.json({
+    id: blog.id,
+  });
 })
 
-blogRouter.get('/', (c) => {
-  return c.text('Hello Hono!')
+
+
+blogRouter.get('/', async(c) => {
+
+  const prisma = new PrismaClient({
+      accelerateUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate());
+    const body = await c.req.json();
+
+    try{
+        const blog = await prisma.blog.findFirst({
+          where:{
+            id: body.id
+          }
+        })
+          return c.json({
+            blog
+      });
+    }catch(e){
+      c.status(411);
+      return c.json({
+        message: "error while fetching blog post"
+      });
+    } 
 })
 
-blogRouter.get('/bulk', (c) => {
-  return c.text('Hello Hono!')
+blogRouter.get('/bulk', async(c) => {
+    const prisma = new PrismaClient({
+      accelerateUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate());
+    const body = await c.req.json();
+
+    const blogs = await prisma.blog.findMany();
+
+    return c.json({
+      blogs
+    })
 })
