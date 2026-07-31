@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../generated/prisma/client";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { Hono } from "hono";
 import { verify } from "hono/jwt";
@@ -17,28 +17,52 @@ export const blogRouter = new Hono<
 
 
 blogRouter.use("/*", async (c, next)=>{
-  const authHeader = c.req.header("authorization") || "";
+  console.log("Hit the blog m8d");
+  const authHeader = c.req.header("Authorization") || "";
   //@ts-ignore
-  const user = await verify(authHeader, c.env.JWT_SECRET); 
+  const user = await verify(authHeader, c.env.JWT_SECRET, "HS256"); 
   if(user){
     //@ts-ignore
     c.set("userId", user.id);
+    console.log(2);
     await next();
+    console.log(3);
   }else{
     c.status(403);
     return c.json({
       message: "You are not logged in"
     });
   }
-})
+});
+
+// blogRouter.use("/*", async (c, next) => {
+//   const authHeader = c.req.header("Authorization");
+//   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+//     c.status(401);
+//     return c.json({ message: "You are not logged in" });
+//   }
+
+//   const token = authHeader.split(' ')[1];
+
+//   try {
+//     const user = await verify(token, c.env.JWT_SECRET);
+//     c.set("userId", user.id as string);
+//     await next();
+//   } catch (e) {
+//     c.status(401);
+//     return c.json({ message: "You are not logged in" });
+//   }
+// });
 
 
 blogRouter.post('/', async (c) => {
+  console.log("Hit the blog router");
 
   const prisma = new PrismaClient({
       accelerateUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate());
     const body = await c.req.json();
+    //@ts-ignore
     const authorId = c.get("userId");
     const blog = await prisma.blog.create({
       data: {
@@ -56,7 +80,6 @@ blogRouter.post('/', async (c) => {
 
 
 blogRouter.put('/a', async(c) => {
-
   const prisma = new PrismaClient({
       accelerateUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate());
@@ -68,10 +91,8 @@ blogRouter.put('/a', async(c) => {
       data: {
         title : body.title,
         content : body.content,
-
       }
     })
-
   return c.json({
     id: blog.id,
   });

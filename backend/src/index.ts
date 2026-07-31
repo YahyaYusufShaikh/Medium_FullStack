@@ -4,6 +4,9 @@ import { withAccelerate } from '@prisma/extension-accelerate'
 import { sign, verify } from 'hono/jwt'
 import { userRouter } from './routes/user';
 import { blogRouter } from './routes/blog';
+import ts from 'typescript';
+
+
 const app = new Hono<{
 	Bindings: {
 		DATABASE_URL: string,
@@ -11,19 +14,40 @@ const app = new Hono<{
 	}
 }>();
 
+// app.use('/api/v1/blog/*', async (c, next) => {
+//   const jwt = c.req.header('Authorization');
+//   console.log(jwt);
+//   if(!jwt){
+//     c.status(401);
+//     return c.json({error: 'Unauthorized'});
+//   }
+//   const token = jwt.split(' ')[1];
+//   const payload = await verify(token, c.env.JWT_SECRET, "HS256");
+//   if(!payload){
+//     c.status(401);
+//     return c.json({error: 'Unauthorized'});
+//   }
+//   c.set('userId', payload.id);
+//   await next(); 
+// })
+
 app.use('/api/v1/blog/*', async (c, next) => {
   const jwt = c.req.header('Authorization');
+  //@ts-ignore
+  console.log(jwt);
   if(!jwt){
     c.status(401);
     return c.json({error: 'Unauthorized'});
   }
-  const token = jwt.split('')[1];
-  const payload = await verify(token, c.env.JWT_SECRET);
+  const token = jwt
+  const payload = await verify(token, c.env.JWT_SECRET, "HS256");
+  console.log("jwt pass");
   if(!payload){
     c.status(401);
     return c.json({error: 'Unauthorized'});
   }
-  c.set('userId', payload.id);
+  //@ts-ignore
+  c.set('userId', payload.id as string);
   await next();
 })
 
