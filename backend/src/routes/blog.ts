@@ -9,12 +9,20 @@ export const blogRouter = new Hono<
             DATABASE_URL: string,
             JWT_SECRET: string
         },
-        Variables: {
-          userId: string,
-        }
+        // Variables: {
+        //   userId: string,
+        // }
     }
 >();
 
+// blogRouter.get("/", (c) => {
+//   return c.text("GET works");
+// });
+
+// blogRouter.post("/", (c) => {
+//   console.log("POST works");
+//   return c.text("POST works");
+// });
 
 blogRouter.use("/*", async (c, next)=>{
   console.log("Hit the blog m8d");
@@ -64,11 +72,12 @@ blogRouter.post('/', async (c) => {
     const body = await c.req.json();
     //@ts-ignore
     const authorId = c.get("userId");
-    const blog = await prisma.blog.create({
+    console.log("Author ID", authorId);
+    const blog = await prisma.post.create({
       data: {
         title : body.title,
         content : body.content,
-        authorId: Number(authorId)
+        authorId: authorId
       }
     })
 
