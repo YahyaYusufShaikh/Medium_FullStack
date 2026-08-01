@@ -2,6 +2,7 @@ import { PrismaClient } from "../generated/prisma/client";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { Hono } from "hono";
 import { verify } from "hono/jwt";
+import ts from "typescript";
 
 export const blogRouter = new Hono<
     {
@@ -25,22 +26,26 @@ export const blogRouter = new Hono<
 // });
 
 blogRouter.use("/*", async (c, next)=>{
-  console.log("Hit the blog m8d");
   const authHeader = c.req.header("Authorization") || "";
   //@ts-ignore
   const user = await verify(authHeader, c.env.JWT_SECRET, "HS256"); 
-  if(user){
-    //@ts-ignore
-    c.set("userId", user.id);
-    console.log(2);
-    await next();
-    console.log(3);
-  }else{
+ try{
+       if(user){
+      //@ts-ignore
+      c.set("userId", user.id);
+      await next();
+    }else{
+      c.status(403);
+      return c.json({
+        message: "You are not logged in"
+      });
+    }
+ } catch(e){
     c.status(403);
-    return c.json({
-      message: "You are not logged in"
-    });
-  }
+      return c.json({
+        message: "You are not logged in"
+      });
+ }
 });
 
 // blogRouter.use("/*", async (c, next) => {
@@ -64,7 +69,6 @@ blogRouter.use("/*", async (c, next)=>{
 
 
 blogRouter.post('/', async (c) => {
-  console.log("Hit the blog router");
 
   const prisma = new PrismaClient({
       accelerateUrl: c.env.DATABASE_URL,
@@ -72,11 +76,11 @@ blogRouter.post('/', async (c) => {
     const body = await c.req.json();
     //@ts-ignore
     const authorId = c.get("userId");
-    console.log("Author ID", authorId);
     const blog = await prisma.post.create({
       data: {
         title : body.title,
         content : body.content,
+        // @ts-ignore
         authorId: authorId
       }
     })

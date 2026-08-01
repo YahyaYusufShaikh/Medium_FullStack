@@ -41,7 +41,6 @@ app.use('/api/v1/blog/*', async (c, next) => {
   }
   const token = jwt
   const payload = await verify(token, c.env.JWT_SECRET, "HS256");
-  console.log("jwt pass");
   if(!payload){
     c.status(401);
     return c.json({error: 'Unauthorized'});
