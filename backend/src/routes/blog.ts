@@ -107,6 +107,19 @@ blogRouter.put('/', async(c) => {
   });
 })
 
+//it should be before the get by id other wise compiler will get bulk as an ID and find the blog with id as bulk
+blogRouter.get('/bulk', async(c) => {
+    const prisma = new PrismaClient({
+      accelerateUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate());
+    const body = await c.req.json();
+    
+    const blog = await prisma.post.findMany();
+
+    return c.json({
+      blog
+    })
+})
 
 
 blogRouter.get('/:id', async(c) => {
@@ -134,15 +147,3 @@ blogRouter.get('/:id', async(c) => {
     } 
 })
 
-blogRouter.get('/bulk', async(c) => {
-    const prisma = new PrismaClient({
-      accelerateUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate());
-    const body = await c.req.json();
-
-    const blogs = await prisma.blog.findMany();
-
-    return c.json({
-      blogs
-    })
-})
