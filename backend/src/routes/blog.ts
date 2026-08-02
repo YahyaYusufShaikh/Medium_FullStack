@@ -3,6 +3,8 @@ import { withAccelerate } from "@prisma/extension-accelerate";
 import { Hono } from "hono";
 import { verify } from "hono/jwt";
 import ts from "typescript";
+import { updateblogInput, createblogInput } from "@yahya_coder/medium-common"
+
 
 export const blogRouter = new Hono<
     {
@@ -70,10 +72,19 @@ blogRouter.use("/*", async (c, next)=>{
 
 blogRouter.post('/', async (c) => {
 
+  const body = await c.req.json();
+
+  const {success} = createblogInput.safeParse(body);
+  if(!success){
+    c.status(411);
+    return c.json({
+      message:"Inputs are not correct"
+    })
+  }
+
   const prisma = new PrismaClient({
       accelerateUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate());
-    const body = await c.req.json();
     //@ts-ignore
     const authorId = c.get("userId");
     const blog = await prisma.post.create({
@@ -93,10 +104,19 @@ blogRouter.post('/', async (c) => {
 
 
 blogRouter.put('/', async(c) => {
+  const body = await c.req.json();
+  
+  const {success} = updateblogInput.safeParse(body);
+  if(!success){
+    c.status(411);
+    return c.json({
+      message:"Inputs are not correct"
+    })
+  }
+  
   const prisma = new PrismaClient({
       accelerateUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate());
-    const body = await c.req.json();
     const blog = await prisma.post.update({
       where : {
         id : body.id

@@ -9,12 +9,11 @@ export const signinInput = z.object({
     password: z.string().min(6),
 });
 export const createblogInput = z.object({
-    tite: z.string(),
+    title: z.string(),
     content: z.string()
 });
 export const updateblogInput = z.object({
-    tite: z.string(),
+    title: z.string(),
     content: z.string(),
     id: z.string()
 });
-//# sourceMappingURL=index.js.map
